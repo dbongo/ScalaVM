@@ -17,6 +17,12 @@ wget http://apt.typesafe.com/"$debfile" > /dev/null 2>&1
 dpkg -i "$debfile" > /dev/null 2>&1
 apt-get update > /dev/null 2>&1
 apt-get install -y sbt > /dev/null 2>&1
+readonly sbt_script="/usr/bin/sbt"
+sed -i "$sbt_script" -e "s#local mem=\${1:-1536}#local mem=\${1:-256}#g"
+#Needed for giter8
+sed -i "/usr/share/sbt/sbt-launch-lib.bash" -e  "s#local mem=\${1:-1536}#local mem=\${1:-256}#g"
+sed -i "$sbt_script" -e "s#default_sbt_mem=1536#default_sbt_mem=256#g"
+
 
 echo "Installing TypeSafe Stack . . . "
 apt-get install -y typesafe-stack > /dev/null 2>&1
@@ -44,13 +50,17 @@ apt-get install -y postgresql > /dev/null 2>&1
 
 readonly basevim="$homedir/.vim"
 
-echo "Setting up VIM for syntax highlighting"
+echo "Setting up VIM for syntax highlighting . . . "
 #Create directories for vim syntax highlighting then fetch the files from github
 #Credit where credit's due, one liner is from blog posting by Bruce Snyder
 #http://bsnyderblog.blogspot.com/2012/12/vim-syntax-highlighting-for-scala-bash.html
 
 mkdir -p "$basevim"/{ftdetect,indent,syntax} && for d in ftdetect indent syntax ; do wget --no-check-certificate -O "$basevim"/$d/scala.vim https://raw.github.com/scala/scala-dist/master/tool-support/src/vim/$d/scala.vim; done > /dev/null 2>&1
 
+echo "Installing version control . . ."
+sh /vagrant/vcs.sh
+
+echo "Cleaning up temporary resources . . . "
 #clean up after ourselves
 rm -f "$debfile"
 rm -f "$homedir/$activator_zip"
